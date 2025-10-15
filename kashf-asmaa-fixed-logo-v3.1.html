@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>كشف أسماء الطلاب</title>
+  <style>
+    :root { --line:#cfd8dc; --ink:#111827; --warn:#b45309; --warnbg:#fff7ed; }
+    html, body { margin:0; padding:0; background:#f7f7f7; font-family: "Cairo", Arial, sans-serif; color:var(--ink); }
+    .app { max-width:900px; margin:20px auto; padding:12px; }
+    .card { background:#fff; border-radius:10px; padding:16px; margin-top:16px; border:1px solid var(--line); }
+    label { display:block; margin-bottom:6px; font-size:14px; }
+    textarea { width:100%; min-height:200px; resize:vertical; padding:10px; font-size:15px; border:1px solid var(--line); border-radius:8px; }
+    .hint { font-size:12px; color:#6b7280; margin-top:6px; }
+    .warn { margin-top:12px; padding:12px; border-radius:10px; border:1px solid #f5d0a9; background:var(--warnbg); color:var(--warn); font-size:14px; display:flex; gap:8px; align-items:flex-start; }
+    .warn strong { font-weight:800; }
+    button { padding:10px 14px; margin-right:8px; border:none; border-radius:999px; background:#0b6a6a; color:#fff; cursor:pointer; font-weight:700; }
+    button.secondary { background:#0b6a6acc; }
+    .preview { margin-top:24px; }
+    .sheet { width:210mm; min-height:297mm; background:#fff; padding:18mm 16mm; box-sizing:border-box; border:1px solid var(--line); position:relative; margin-inline:auto; }
+    .sheet-header { display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+    .sheet-header img { height:42px; }
+    .boxes { display:block; width:100%; }
+    .box-row { border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-top:10px; min-height:16mm; display:flex; align-items:center; font-size:15px; }
+    .box-row:empty { display:none; }
+    @page { size: A4 portrait; margin: 12mm; }
+    @media print {
+      html, body { background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .app > *:not(.preview) { display:none !important; }
+      .sheet { border:none; width:auto; min-height:auto; margin:0; padding:0; }
+      .sheet-header { margin-bottom:10px; }
+      img { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <label>أدخل أسماء الطلاب (كل اسم في سطر مستقل):</label>
+      <textarea id="namesInput" placeholder="مثال:\nأحمد محمد أحمد\nسارة خالد المطيري\n..."></textarea>
+      <div class="hint">الحد الأقصى 15 اسمًا. الأسطر الفارغة لا تظهر.</div>
+
+      <div class="warn" id="printTip">
+        <div>⚠️</div>
+        <div>
+          <strong>تذكير هام قبل الطباعة:</strong><br>
+          من نافذة الطباعة &rarr; <em>المزيد من الإعدادات (More settings)</em> &rarr; عطّل خيار <em>الرؤوس والتذييلات (Headers and footers)</em> حتى لا يظهر التاريخ والوقت ورابط الصفحة.
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <button id="btnPrint" class="secondary">طباعة PDF</button>
+        <button id="btnClear">مسح</button>
+      </div>
+    </div>
+
+    <div class="preview">
+      <div class="sheet" id="sheet">
+        <div class="sheet-header">
+          <img src="https://salogos.org/wp-content/uploads/2021/11/UntiTtled-1.png" alt="شعار وزارة التعليم">
+        </div>
+        <div class="boxes" id="boxes"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const namesInput = document.getElementById('namesInput');
+    const boxes = document.getElementById('boxes');
+    const btnPrint = document.getElementById('btnPrint');
+    const btnClear = document.getElementById('btnClear');
+
+    function getNames() {
+      return namesInput.value
+        .split(/\\r?\\n/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .slice(0, 15);
+    }
+
+    function render() {
+      const names = getNames();
+      boxes.innerHTML = '';
+      names.forEach((nm) => {
+        const div = document.createElement('div');
+        div.className = 'box-row';
+        div.textContent = nm;
+        boxes.appendChild(div);
+      });
+    }
+
+    // تحديث فوري
+    namesInput.addEventListener('input', render);
+
+    // طباعة مع تذكير إضافي
+    btnPrint.addEventListener('click', () => {
+      render();
+      const msg = "تذكير هام:\\n\\n• من نافذة الطباعة -> المزيد من الإعدادات (More settings)\\n• عطّل خيار: الرؤوس والتذييلات (Headers and footers)\\n\\nهل تريد المتابعة إلى الطباعة الآن؟";
+      if (confirm(msg)) {
+        window.print();
+      }
+    });
+
+    // مسح
+    btnClear.addEventListener('click', () => {
+      namesInput.value = '';
+      render();
+    });
+
+    // أول عرض
+    render();
+  </script>
+</body>
+</html>
